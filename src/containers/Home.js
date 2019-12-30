@@ -6,15 +6,13 @@ import {
   Divider,
   Grid,
   Header,
-  Icon,
   Image,
-  List,
-  Menu,
   Responsive,
   Segment,
   Sidebar,
   Visibility
 } from "semantic-ui-react";
+import { Link } from "react-router-dom";
 
 const getWidth = () => {
   const isSSR = typeof window === "undefined";
@@ -119,7 +117,9 @@ const HomepageLayout = () => (
         </Grid.Row>
         <Grid.Row>
           <Grid.Column textAlign="center">
-            <Button size="huge">Check Them Out</Button>
+            <Link to="/products">
+              <Button size="huge">Check Them Out</Button>
+            </Link>
           </Grid.Column>
         </Grid.Row>
       </Grid>
