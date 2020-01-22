@@ -39,6 +39,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# fixes “No 'Access-Control-Allow-Origin' header is present on the requested resource” in django
+CORS_ORIGIN_ALLOW_ALL = True
+
 ROOT_URLCONF = 'home.urls'
 
 TEMPLATES = [
