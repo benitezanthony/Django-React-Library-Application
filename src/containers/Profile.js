@@ -405,7 +405,7 @@ class Profile extends React.Component {
                 {/*segment padding for better page visibility*/}
                 <Segment style={{ padding: "1em 0em" }} vertical>
                     <Header as='h1'>
-                        User Information: {username}
+                        Information of User: <Label color='blue' size='huge'>{username}</Label>
                     </Header>
                 </Segment>
                 {error && (
@@ -476,7 +476,7 @@ class Profile extends React.Component {
                                                             <Card.Meta>
                                                                 {a.zip},
                                                                 {/*                               
-                                                                With this notation, you’ll never run into Cannot read property ‘.text’ of undefined. You basically check if object exists, 
+                                                                With this notation, you’ll never run into Cannot read property ‘.property’ of undefined. You basically check if object exists, 
                                                                 if not, you create an empty object on the fly. This way, the next level key will always be accessed from an object that 
                                                                 exists or an empty object, but never from undefined. */}
 

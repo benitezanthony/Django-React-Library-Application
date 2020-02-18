@@ -19,13 +19,38 @@ import { fetchCart } from "../store/actions/cart";
 
 class CustomLayout extends React.Component {
 
+  state = {
+    reload: false,
+    loading: false,
+  };
+
   contextRef = createRef()
   componentDidMount() {
     this.props.fetchCart()
   }
 
+  logOut = () => {
+    this.setState({
+      reload: true,
+      loading: true,
+    })
+    this.props.logout()
+  }
+
   render() {
-    const { authenticated, cart, loading } = this.props
+    const { authenticated, cart } = this.props
+    const { reload, loading } = this.state
+
+
+    /* used to reload the page and get updated 
+    shopping cart values for current user */
+    if (reload && authenticated) {
+      this.setState({
+        reload: false,
+        loading: false,
+      })
+      window.location.reload(false)
+    }
 
     return (
       <div ref={this.contextRef}>
@@ -46,17 +71,19 @@ class CustomLayout extends React.Component {
                         Profile
                     </Menu.Item>
                     </Link>
-                    <Menu.Item
-                      loading={loading}
-                      onClick={() => this.props.history.push('/order-summary')}>
-                      Cart
-                    <Icon.Group size='large'>
-                        <Icon name='cart' />
-                        {/* <Icon corner='top right' name='check' color='green' /> */}
-                      </Icon.Group>
-                      <Label color='green'>{cart != null ? cart.order_items.length : 0}</Label>
-                    </Menu.Item>
-                    <Menu.Item header style={{ fontSize: "1.5em" }} onClick={() => this.props.logout()}>
+                    {authenticated && !loading ? (
+                      <Menu.Item
+                        loading={loading}
+                        onClick={() => this.props.history.push('/order-summary')}>
+                        Cart
+                        <Icon.Group size='large'>
+                          <Icon name='cart' />
+                          {/* <Icon corner='top right' name='check' color='green' /> */}
+                        </Icon.Group>
+                        <Label color='green'>{cart != null ? cart.order_items.length : '0'}</Label>
+                      </Menu.Item>
+                    ) : ''}
+                    <Menu.Item header style={{ fontSize: "1.5em" }} onClick={() => this.logOut()}>
                       Logout
                   </Menu.Item>
                   </React.Fragment>) : (
@@ -82,8 +109,7 @@ class CustomLayout extends React.Component {
 
         <Segment
           inverted
-          vertical
-          style={{ margin: "5em 0em 0em", padding: "5em 0em" }} >
+          vertical >
 
           <Container textAlign="center">
             <Grid divided inverted stackable>

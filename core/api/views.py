@@ -16,10 +16,57 @@ from .serializers import (ItemSerializer, OrderSerializer, ItemCommentSerializer
                           AddressSerializer, PaymentSerializer, SavedForLaterItemSerializer)
 from core.models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Avg
 
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+GENRE_CHOICES = (
+    # Fiction
+    ('AA', 'Action and adventure'),
+    ('AH', 'Alternate history'),
+    ('AT', 'Anthology'),
+    ('CH', 'Childrens'),
+    ('CO', 'Comic book'),
+    ('CR', 'Crime'),
+    ('DR', 'Drama'),
+    ('FT', 'Fairytale'),
+    ('FA', 'Fantasy'),
+    ('GN', 'Graphic novel'),
+    ('HF', 'Historical fiction'),
+    ('HO', 'Horror'),
+    ('MY', 'Mystery'),
+    ('PO', 'Poetry'),
+    ('PT', 'Political thriller'),
+    ('RO', 'Romance'),
+    ('SF', 'Science fiction'),
+    ('SS', 'Short story'),
+    ('SP', 'Suspense'),
+    ('TH', 'Thriller'),
+
+    # Non-Fiction
+    ('AR', 'Art'),
+    ('AB', 'Autobiography'),
+    ('BO', 'Biography'),
+    ('BR', 'Book review'),
+    ('CB', 'Cookbook'),
+    ('DI', 'Diary'),
+    ('EN', 'Encyclopedia'),
+    ('GU', 'Guide'),
+    ('HE', 'Health'),
+    ('HI', 'History'),
+    ('JO', 'Journal'),
+    ('MA', 'Math'),
+    ('ME', 'Memoir'),
+    ('RS', 'Religion, spirituality, and new age'),
+    ('TB', 'Textbook'),
+    ('RE', 'Review'),
+    ('SC', 'Science'),
+    ('SH', 'Self help'),
+    ('TR', 'Travel'),
+)
 
 
 class UserIDView(APIView):
@@ -104,6 +151,37 @@ class AuthorListView(ListAPIView):
         return qs.filter(author_name=author_name)
 
     # pagination_class = PageNumberPagination
+
+
+class GenreChoiceListView(APIView):
+    def get(self, request, *args, **kwargs):
+        return Response(GENRE_CHOICES, status=HTTP_200_OK)
+
+
+class BrowseAndSort(ListAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ItemSerializer
+
+    def get_queryset(self):
+        # initial query set
+        qs = Item.objects.all()
+        browseBy = self.request.query_params.get('browseBy', None)
+        sortBy = self.request.query_params.get('sortBy', None)
+
+        if browseBy == 'null' and sortBy == 'null':
+            return qs
+
+        genre_dict = dict(GENRE_CHOICES)
+        # if genre found inside genre dictionary, query filters by genre
+        if browseBy in genre_dict and browseBy != 'null':
+            if sortBy == 'null':
+                return qs.filter(genre=browseBy)
+            else:
+                return qs.filter(genre=browseBy).order_by(sortBy)
+        elif sortBy != 'null':
+            # print('rateing filter testing!!!!!!!!!!!!!!!!!!!!!!!!!')
+            # return Item.objects.order_by('rating')
+            return qs.order_by(sortBy)
 
 
 class AddressListView(ListAPIView):

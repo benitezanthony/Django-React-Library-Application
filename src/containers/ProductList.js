@@ -2,10 +2,10 @@ import React from 'react'
 import axios from 'axios'
 import { connect } from 'react-redux'
 import {
-    Button, Container, Icon, Item, Label, Message, Segment, Accordion, Header, Pagination,
-    Grid, Divider, Popup, Form, Card, Modal, Image, Rating
+    Button, Container, Icon, Item, Label, Message, Segment, Header, Pagination,
+    Grid, Divider, Popup, Form, Card, Modal, Image, Rating, Dropdown, Menu
 } from 'semantic-ui-react'
-import { ProductListURL, addToCartURL } from '../constants'
+import { ProductListURL, addToCartURL, BrowseAndSortURL, genreChoiceListURL } from '../constants'
 import { authAxios } from '../utils'
 import { fetchCart } from '../store/actions/cart'
 
@@ -21,8 +21,51 @@ class ProductList extends React.Component {
         defaultActivePage: 1,  //default activate page is #1
         itemsPerPage: 1,
         itemTotalCount: 1,
+        sortBy: null,
+        browseBy: null,
+        activeSortItem: null,
+        activeBrowseItem: null,
+        genreChoiceList: null,
+    }
+
+
+    handleBrowseClick = (e, { name }) => {
+        this.setState({
+            activeBrowseItem: name
+        })
+    }
+
+    handleSortClick = (e, { name }) => {
+        const sortChoice = name
+        const { browseBy } = this.state
+        this.setState({
+            activeSortItem: name,
+            sortBy: sortChoice
+        })
+        this.handleFetchBrowseAndSortByList(browseBy, sortChoice)
+    }
+
+    handleChange = (e, { value }) => {
+        this.setState({ browseBy: value })
+        const { sortBy, defaultActivePage } = this.state
+        /* if genre selection is cleared, selection is an empty string and we browse
+        by handleFetchProductList(), the default browsing method */
+        if (value.trim() == "") {
+            this.handleFetchProductList(defaultActivePage)
+            /* if dropdown menu cleared, reset browse and sort back to null */
+            this.setState({
+                browseBy: null,
+                sortBy: null,
+                activeBrowseItem: null,
+                activeSortItem: null,
+            })
+        }
+        else {
+            this.handleFetchBrowseAndSortByList(value, sortBy)
+        }
 
     }
+
 
     handleTotalPageCount = (totalProductsCount, itemsPerPage) => {
         //if item count divided by items per page has NO remainder
@@ -54,6 +97,7 @@ class ProductList extends React.Component {
         this.handleFetchProductList(defaultActivePage)
         this.hadleFetchItemsPerPage()
         this.hadleFetchItemTotalCount()
+        this.handleFetchGenreChoices()
     }
 
     hadleFetchItemsPerPage = () => {
@@ -93,6 +137,53 @@ class ProductList extends React.Component {
             })
     }
 
+    handleFetchBrowseAndSortByList = (browseBy, sortBy) => {
+        this.setState({ loading: true })
+        axios
+            .get(BrowseAndSortURL(browseBy, sortBy))
+            .then(res => {
+                /* console.log(res) */
+                this.setState({ data: res.data.results, loading: false })
+            })
+            .catch(err => {
+                this.setState({ error: err })
+            })
+    }
+
+    handleFetchGenreChoices = () => {
+        axios
+            .get(genreChoiceListURL)
+            .then(res => {
+                this.setState({
+                    genreChoiceList: this.handleFormatGenreChoices(res.data)
+                })
+            })
+            .catch(err => {
+                this.setState({ error: err })
+            })
+    }
+
+    handleFormatGenreChoices = genreChoiceList => {
+        /* convert array of arrays to Javascript object */
+        var obj = {}
+        genreChoiceList.forEach(function (genreChoiceList) {
+            obj[genreChoiceList[0]] = genreChoiceList[1]
+        })
+
+        const keys = Object.keys(obj)
+        // map for each key
+        return keys.map(k => {
+            return {
+                key: k,
+                //what the user actually sees, the genre name
+                text: obj[k],
+                //the genre code k, the value we want to use when submitting data
+                value: k
+            }
+        })
+
+    }
+
     handleAddToCart = slug => {
         this.setState({ loading: true })
         authAxios
@@ -109,9 +200,8 @@ class ProductList extends React.Component {
 
     render() {
         const { data, error, loading, activePage,
-            itemsPerPage, submittedItemsPerPage, totalPages } = this.state
-
-        console.log(data)
+            itemsPerPage, submittedItemsPerPage, genreChoiceList,
+            totalPages, browseBy, sortBy, activeSortItem, activeBrowseItem } = this.state
 
         return (
             <Container>
@@ -130,6 +220,69 @@ class ProductList extends React.Component {
                         content={JSON.stringify(error)}
                     />
                 )}
+
+                {/* browse and sort menus */}
+                <Menu text>
+                    <Menu.Item header>Browse By</Menu.Item>
+                    <Menu.Item
+                        name='genre'
+                        active={activeBrowseItem === 'genre'}
+                    />
+                    <Dropdown
+                        placeholder='Select Genre'
+                        clearable
+                        search
+                        name="genre"
+                        active={activeBrowseItem === 'genre'}
+                        onChange={this.handleChange}
+                        onClick={this.handleBrowseClick}
+                        selection
+                        options={genreChoiceList}
+                        value={browseBy}
+                    />
+                    <Menu.Item
+                        name='topSellers'
+                        active={activeBrowseItem === 'topSellers'}
+                        onClick={this.handleBrowseClick}
+                    />
+                    <Menu.Item
+                        name='bookRating'
+                        active={activeBrowseItem === 'bookRating'}
+                        onClick={this.handleBrowseClick}
+                    />
+                </Menu>
+                <Menu text>
+                    <Menu.Item header>Sort By</Menu.Item>
+                    <Menu.Item
+                        name='title'
+                        active={activeSortItem === 'title'}
+                        onClick={this.handleSortClick}
+                    />
+                    <Menu.Item
+                        name='author_name'
+                        active={activeSortItem === 'author_name'}
+                        onClick={this.handleSortClick}
+                    />
+                    <Menu.Item
+                        name='price'
+                        active={activeSortItem === 'price'}
+                        onClick={this.handleSortClick}
+                    />
+                    <Menu.Item
+                        name='rating'
+                        active={activeSortItem === 'rating'}
+                        onClick={this.handleSortClick}
+                    />
+                    <Menu.Item
+                        name='release_date'
+                        active={activeSortItem === 'release_date'}
+                        onClick={this.handleSortClick}
+                    />
+                </Menu>
+
+
+
+
 
                 <Segment loading={loading}>
                     <Card.Group itemsPerRow={3}>
@@ -160,6 +313,9 @@ class ProductList extends React.Component {
                                             </Card.Meta>
                                             <Card.Description>
                                                 Written by {item.author_name}
+                                                <br></br><br></br>
+                                                Date Released:<br></br>
+                                                {new Date(item.release_date).toUTCString()}
                                             </Card.Description>
                                         </Card.Content>
                                         <Card.Content extra>

@@ -9,7 +9,7 @@ import {
     SavedForLaterListURL, addToSavedItemListURL, userIDURL, SavedForLaterItemDeleteURL
 } from '../constants'
 import { connect } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 import { fetchCart } from '../store/actions/cart'
 
 
@@ -20,7 +20,6 @@ class OrderSummary extends React.Component {
         error: null,
         loading: false,
         userID: null
-
     }
 
     componentDidMount() {
@@ -142,10 +141,13 @@ class OrderSummary extends React.Component {
         const { data, error, loading } = this.state
         const { isAuthenticated } = this.props
 
+        console.log(this.props)
+        console.log(isAuthenticated)
         if (!isAuthenticated) {
-            //return <Redirect to="/login" />;
+            return <Redirect to="/login" />;
         }
 
+        console.log(isAuthenticated)
 
         return (
             <Container>

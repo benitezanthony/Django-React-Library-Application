@@ -6,11 +6,14 @@ from .views import (ItemListView, AddToCartView,
                     AddressCreateView, CountryListView, UserIDView,
                     AddressUpdateView, AddressDeleteView, PaymentListView,
                     SavedForLaterListView, SavedForLaterItemCreateView,
-                    SavedForLaterItemDeleteView, AuthorListView, ItemCommentView, ItemRatingView)
+                    SavedForLaterItemDeleteView, AuthorListView, ItemCommentView,
+                    ItemRatingView, BrowseAndSort, GenreChoiceListView)
 
 urlpatterns = [
     path('user-id/', UserIDView.as_view(), name='user-id'),
     path('countries/', CountryListView.as_view(), name='country-list'),
+    path('genre-choices/', GenreChoiceListView.as_view(), name='genre-choice-list'),
+    path('browse/', BrowseAndSort.as_view(), name='browse-sort-list'),
     path('addresses/', AddressListView.as_view(), name='address-list'),
     path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
     path('addresses/<pk>/update/',
