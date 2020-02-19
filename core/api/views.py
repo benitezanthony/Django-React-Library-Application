@@ -165,7 +165,9 @@ class BrowseAndSort(ListAPIView):
     def get_queryset(self):
         # initial query set
         qs = Item.objects.all()
+        # browseBy values may be: GENRE_CHOICES (dictionary values), top sellers list, book rating category
         browseBy = self.request.query_params.get('browseBy', None)
+        # sortBy values may be: author_name, price, release_date (model fields), rating (calculated in view)
         sortBy = self.request.query_params.get('sortBy', None)
 
         if browseBy == 'null' and sortBy == 'null':
@@ -177,10 +179,25 @@ class BrowseAndSort(ListAPIView):
             if sortBy == 'null':
                 return qs.filter(genre=browseBy)
             else:
+                # if the sorting method is by rating
+                if sortBy == 'rating':
+                    # This will return one result for each book in the database,
+                    # rating__rating refers to the Rating model, and the field 'rating'
+                    return qs.filter(genre=browseBy).annotate(
+                        average_rating=Avg('rating__rating')
+                    ).order_by('-average_rating')  # order by descending values
+                # every other sorting method:
                 return qs.filter(genre=browseBy).order_by(sortBy)
+
         elif sortBy != 'null':
-            # print('rateing filter testing!!!!!!!!!!!!!!!!!!!!!!!!!')
-            # return Item.objects.order_by('rating')
+            # if the sorting method is by rating
+            if sortBy == 'rating':
+                # This will return one result for each book in the database,
+                # rating__rating refers to the Rating model, and the field 'rating'
+                return qs.annotate(
+                    average_rating=Avg('rating__rating')
+                ).order_by('-average_rating')  # order by descending values
+            # every other sorting method:
             return qs.order_by(sortBy)
 
 
